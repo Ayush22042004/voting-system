@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Voter Panel</h2>
+{% if not election %}
+  <div class="card"><p>No active election at the moment. Please wait for admin to schedule.</p></div>
+{% else %}
+  <div class="card">
+    <h3>Election: {{ election.category }}</h3>
+    <p>From {{ election.start_time }} to {{ election.end_time }}</p>
+    {% if voted %}
+      <p class="muted">You have already voted for this election.</p>
+    {% else %}
+      <div class="candidates-list">
+        {% for c in candidates %}
+          <div class="candidate-card">
+            {% if c.photo %}
+              <img src="{{ url_for('static', filename=c.photo) }}" alt="photo">
+            {% endif %}
+            <h4>{{ c.name }}</h4>
+            <form method="POST" action="{{ url_for('cast_vote', candidate_id=c.id) }}">
+              <button class="btn primary" type="submit">Vote</button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}

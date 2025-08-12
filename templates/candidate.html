@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Candidate Panel</h2>
+<div class="card">
+  <h3>{{ user.name }}</h3>
+  {% if candidate %}
+    <p>Category: {{ candidate.category }}</p>
+    {% if candidate.photo %}<img src="{{ url_for('static', filename=candidate.photo) }}" style="max-width:220px;">{% endif %}
+  {% else %}
+    <p class="muted">No candidate record found for your name.</p>
+  {% endif %}
+</div>
+
+{% if election %}
+  <div class="card">
+    <h3>Live Results ({{ election.category }})</h3>
+    <canvas id="chartCanvas"></canvas>
+  </div>
+
+  <script>
+    const labels = [{% for r in results %}"{{ r.name }}",{% endfor %}];
+    const data = [{% for r in results %}{{ r.votes }},{% endfor %}];
+    const ctx = document.getElementById('chartCanvas').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels, datasets: [{ label: 'Votes', data }]
+      },
+      options: {
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  </script>
+{% else %}
+  <div class="card"><p>No active election right now.</p></div>
+{% endif %}
+{% endblock %}
