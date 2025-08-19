@@ -127,7 +127,7 @@ def login_required(role=None):
     return wrapper
 
 def get_current_election():
-    now = datetime.utcnow()
+    now = datetime.now()
     rows = query_db("SELECT * FROM elections")
     for r in rows:
         st = datetime.fromisoformat(r["start_time"])
@@ -223,7 +223,7 @@ def add_candidate():
     if "photo" in request.files:
         file = request.files["photo"]
         if file and allowed_file(file.filename):
-            filename = secure_filename(f"{int(datetime.utcnow().timestamp())}_{file.filename}")
+            filename = secure_filename(f"{int(datetime.now().timestamp())}_{file.filename}")
             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
             photo = f"uploads/{filename}"
 
@@ -309,7 +309,7 @@ def voter_panel():
 def cast_vote(candidate_id):
     user_id = session["user_id"]
     election = get_current_election()
-    now = datetime.utcnow()
+    now = datetime.now()
     if not election:
         flash("No active election right now.", "danger")
         return redirect(url_for("voter_panel"))
@@ -370,7 +370,7 @@ def results():
             GROUP BY c.id
         """, (election["id"], election["category"]))
     elections = query_db("SELECT * FROM elections")
-    return render_template("results.html", election=election, results=results, elections=elections)
+    return render_template("result.html", election=election, results=results, elections=elections)
 
 # ---------- Run ----------
 if __name__ == "__main__":
