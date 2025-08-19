@@ -9,6 +9,37 @@ from flask import (Flask, render_template, request, redirect, url_for, flash,
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
+
+from datetime import datetime, timezone
+try:
+    from zoneinfo import ZoneInfo  # Python 3.9+
+except Exception:
+    ZoneInfo = None
+
+LOCAL_TZ = ZoneInfo("Asia/Kolkata") if ZoneInfo else None
+
+def utc_now():
+    try:
+        return datetime.now(timezone.utc)
+    except Exception:
+        return datetime.utcnow().replace(tzinfo=timezone.utc)
+
+def parse_local_to_utc(dt_str: str) -> datetime:
+    # dt_str like "YYYY-MM-DDTHH:MM" from <input type="datetime-local">
+    naive_local = datetime.fromisoformat(dt_str)
+    if LOCAL_TZ:
+        aware_local = naive_local.replace(tzinfo=LOCAL_TZ)
+    else:
+        # Fallback: treat input as UTC if zoneinfo not available
+        aware_local = naive_local.replace(tzinfo=timezone.utc)
+    return aware_local.astimezone(timezone.utc)
+
+def parse_utc_iso(s: str) -> datetime:
+    # Accept ISO strings either naive (assume UTC) or with offset
+    dt = datetime.fromisoformat(s)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
 # ---------- Configuration ----------
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DB_PATH = os.path.join(BASE_DIR, "voting.db")
@@ -127,11 +158,11 @@ def login_required(role=None):
     return wrapper
 
 def get_current_election():
-    now = datetime.now()
+    now = utc_now()
     rows = query_db("SELECT * FROM elections")
     for r in rows:
-        st = datetime.fromisoformat(r["start_time"])
-        et = datetime.fromisoformat(r["end_time"])
+        st = parse_utc_iso(r["start_time"])
+        et = parse_utc_iso(r["end_time"])
         if st <= now <= et:
             return r
     return None
@@ -223,7 +254,7 @@ def add_candidate():
     if "photo" in request.files:
         file = request.files["photo"]
         if file and allowed_file(file.filename):
-            filename = secure_filename(f"{int(datetime.now().timestamp())}_{file.filename}")
+            filename = secure_filename(f"{int(datetime.utcnow().timestamp())}_{file.filename}")
             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
             photo = f"uploads/{filename}"
 
@@ -258,8 +289,8 @@ def add_election():
     # flask form input type="datetime-local" returns 'YYYY-MM-DDTHH:MM'
     try:
         # store as ISO strings
-        st = datetime.fromisoformat(start_time)
-        et = datetime.fromisoformat(end_time)
+        st = parse_local_to_utc(start_time)
+        et = parse_local_to_utc(end_time)
         if et <= st:
             flash("End time must be after start time", "danger")
             return redirect(url_for("admin_panel"))
@@ -309,12 +340,12 @@ def voter_panel():
 def cast_vote(candidate_id):
     user_id = session["user_id"]
     election = get_current_election()
-    now = datetime.now()
+    now = utc_now()
     if not election:
         flash("No active election right now.", "danger")
         return redirect(url_for("voter_panel"))
-    st = datetime.fromisoformat(election["start_time"])
-    et = datetime.fromisoformat(election["end_time"])
+    st = parse_utc_iso(election["start_time"])
+    et = parse_utc_iso(election["end_time"])
     if not (st <= now <= et):
         flash("Voting is closed for this election.", "danger")
         return redirect(url_for("voter_panel"))
