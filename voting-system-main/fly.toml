@@ -1,0 +1,21 @@
+# Fly.io configuration. After running `fly launch`, Fly will update this file with your app name.
+app = "voting-system-app"
+
+primary_region = "sin"  # Singapore (close to India). Change if you prefer.
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  DATABASE_PATH = "/data/voting.db"
+
+[[mounts]]
+  source = "data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true

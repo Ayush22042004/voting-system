@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>Welcome to Club Voting</h1>
+  <p style="color:var(--muted)">Fast, secure, and fair elections for your club—beautifully simple.</p>
+  {% if not session.get('user_id') %}
+    <div>
+      <a class="btn" href="{{ url_for('login') }}" style="margin-right:8px">Login</a>
+      <a class="btn outline" href="{{ url_for('signup') }}">Create account</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

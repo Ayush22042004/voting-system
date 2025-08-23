@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card auth-card">
+  <h2>Create Voter Account</h2>
+  <form method="POST" action="{{ url_for('signup') }}">
+    <input name="name" placeholder="Full name" required>
+    <input name="email" placeholder="Email">
+    <input name="username" placeholder="Username" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <!-- role selection removed: voter-only signup -->
+<input name="id_number" placeholder="ID number (voter only)" required>
+    <button class="btn primary" type="submit">Register</button>
+  </form>
+</div>
+{% endblock %}

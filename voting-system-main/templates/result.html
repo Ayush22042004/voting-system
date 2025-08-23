@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Results Dashboard</h2>
+<div class="card">
+  {% if not election %}
+    <p class="muted">No active election selected.</p>
+  {% else %}
+    <h3>Election: {{ election.category }}</h3>
+    <canvas id="resultsChart"></canvas>
+    <p class="muted">Winner highlighted in green.</p>
+    <script>
+      const labels = [{% for r in results %}"{{ r.name }}",{% endfor %}];
+      const data = [{% for r in results %}{{ r.votes }},{% endfor %}];
+      const maxVotes = Math.max(...data,0);
+      const colors = data.map(v => v === maxVotes ? 'rgba(46,204,113,0.9)' : 'rgba(54,162,235,0.7)');
+      const ctx = document.getElementById('resultsChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Votes', data, backgroundColor: colors }] },
+        options: { plugins: { legend: { display: false } } }
+      });
+    </script>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h4>Pick election</h4>
+  <ul>
+    {% for e in elections %}
+      <li><a href="{{ url_for('results') }}?election_id={{ e.id }}">{{ e.category }} — {{ e.start_time }}</a></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

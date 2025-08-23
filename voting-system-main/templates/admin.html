@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Admin Dashboard</h2>
+
+<div class="grid">
+  <div class="card">
+    <h3>Add Candidate</h3>
+    <form method="POST" action="{{ url_for('add_candidate') }}" enctype="multipart/form-data">
+      <input name="name" placeholder="Candidate name" required>
+      <input name="category" placeholder="Category (e.g. General)" required>
+      <input type="file" name="photo" accept="image/*">
+      <button class="btn" type="submit">Add Candidate</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>Add Voter</h3>
+    <form method="POST" action="{{ url_for('add_voter') }}">
+      <input name="name" placeholder="Full name" required>
+      <input name="email" placeholder="Email" required>
+      <input name="username" placeholder="username" required>
+      <input name="id_number" placeholder="ID number" required>
+      <input name="password" placeholder="password (optional)">
+      <button class="btn" type="submit">Add Voter</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>Schedule Election</h3>
+    <form method="POST" action="{{ url_for('add_election') }}">
+      <input name="category" placeholder="Category (must match candidate category)" required>
+      <label>Start</label>
+      <input type="datetime-local" name="start_time" required>
+      <label>End</label>
+      <input type="datetime-local" name="end_time" required>
+      <button class="btn" type="submit">Schedule</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>Current Data</h3>
+    <h4>Candidates</h4>
+    <ul>
+      {% for c in candidates %}
+        <li>{{ c.name }} — {{ c.category }}</li>
+      {% endfor %}
+    </ul>
+    <h4>Voters</h4>
+    <ul>
+      {% for v in voters %}
+        <li>{{ v.name }} ({{ v.id_number }})</li>
+      {% endfor %}
+    </ul>
+    <h4>Elections</h4>
+    <ul>
+      {% for e in elections %}
+        <li>{{ e.category }} | {{ e.start_time }} → {{ e.end_time }} &nbsp;
+            <a href="{{ url_for('results') }}?election_id={{ e.id }}">View results</a> |
+            <a href="{{ url_for('download_results', election_id=e.id) }}">Download CSV</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}
