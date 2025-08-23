@@ -42,7 +42,8 @@ def parse_utc_iso(s: str) -> datetime:
     return dt
 # ---------- Configuration ----------
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-DB_PATH = os.path.join(BASE_DIR, "voting.db")
+DEFAULT_DB_PATH = os.path.join(BASE_DIR, "voting.db")
+DB_PATH = os.getenv("DATABASE_PATH", DEFAULT_DB_PATH)
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -80,6 +81,7 @@ def run_db(query, args=()):
 
 # ---------- Init DB ----------
 def init_db():
+    # BOOTSTRAP_DB_ON_START: create all tables if DB file is missing
     db = sqlite3.connect(DB_PATH)
     c = db.cursor()
     # Users: stores name, email, username, password (hashed), role (admin/voter/candidate), id_number (for voter)
@@ -405,4 +407,15 @@ def results():
 
 # ---------- Run ----------
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Ensure database exists on first boot
+    try:
+        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    except Exception:
+        pass
+    if (not os.path.exists(DB_PATH)):
+        try:
+            init_db()
+        except Exception as e:
+            print(f"[WARN] init_db failed: {e}")
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
